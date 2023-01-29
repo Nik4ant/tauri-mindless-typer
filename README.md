@@ -1,7 +1,4 @@
-# Tauri + Typescript + Solid + Tailwind
-
-Took original template and added tailwind too it. Nothing special
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) + [Tailwind](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+# MindlessTyper
+This is a small project for:
+1. Learning more about Rust and Tauri
+2. Cloning the cool [app]() I've found online. At the time of the writing it doesn't have support for Windows, so I've decided to recreate this app for my personal usage
