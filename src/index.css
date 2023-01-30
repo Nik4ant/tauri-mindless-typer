@@ -1,1 +1,39 @@
 @import "./common/style.css";
+
+@keyframes fade-in {
+	0% {
+		opacity: 0%;
+	}
+	100% {
+		opacity: inherit;
+	}
+}
+@keyframes fade-out {
+	0% {
+		opacity: inherit;
+	}
+	100% {
+		opacity: 0%;
+	}
+}
+
+/* TODO: proper theme system later */
+body {
+	background-color: #212121;
+}
+
+.editor-text, .editor-text-field, .editor-placeholder {
+	@apply text-xl text-amber-100;
+}
+
+textarea.editor-text-field {
+	@apply outline-none bg-transparent resize-none overflow-hidden;
+
+	animation: fade-in 0.5s ease-in;
+}
+
+*.editor-placeholder {
+	opacity: 60%;
+
+	animation: fade-in 0.5s ease-in;
+}

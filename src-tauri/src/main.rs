@@ -10,6 +10,9 @@ fn greet(name: &str) -> String {
 }
 
 fn main() {
+    // TODO: customize menu in the future to make it fit with color theme
+    // FIXME: change comment highliter plugin settings to work with different case and spaces before ':'
+    // TODO 2: Icon with greek letter
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
