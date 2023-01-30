@@ -62,7 +62,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "tauri-mindless-typer",
+        "title": "Mindless typer",
         "width": 800
       }
     ]
