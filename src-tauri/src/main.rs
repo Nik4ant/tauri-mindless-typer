@@ -5,8 +5,8 @@
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! Forget about .NET MAUI use rust", name)
+fn save_to_disk(content: &str) {
+    format!("Content from JS to Rust:\n{}", content);
 }
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
     // FIXME: change comment highliter plugin settings to work with different case and spaces before ':'
     // TODO 2: Icon with greek letter
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![save_to_disk])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
