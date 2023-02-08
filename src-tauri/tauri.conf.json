@@ -61,7 +61,7 @@
       {
         "fullscreen": false,
         "height": 600,
-        "resizable": true,
+        "resizable": false,
         "title": "Mindless typer",
         "width": 800
       }
