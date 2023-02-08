@@ -26,11 +26,13 @@ body {
 .editor-text, .editor-text-field, .editor-placeholder {
 	@apply text-xl text-amber-100 font-mono;
 }
-
 textarea.editor-text-field {
 	@apply outline-none bg-transparent resize-none overflow-hidden whitespace-nowrap border-b border-amber-200/50;
 	
 	animation: fade-in 0.5s ease-in;
+}
+textarea.editor-text-field-warning {
+	@apply border-b border-red-500;
 }
 
 *.editor-placeholder {
