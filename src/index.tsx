@@ -14,11 +14,13 @@ function TextAreaEditor() {
 	// Length at which textarea underline color changes to indicate approaching chars limit
 	const WARNING_LINE_LENGTH = MAX_LINE_LENGTH - 8;
 	
-	//
+	// Flag to check for ctrl presses
 	let wasCtrlPressedRecently: boolean = false;
+	// Contains only current line
 	const [currentEditorLine, setCurrentEditorLine] = createSignal("");
+	// Contains all lines // TODO: might change in the future
 	const [editorContentLines, setEditorContentLines] = createSignal<string[]>([]);
-	const [isFocused, setIsFocused] = createSignal(false);
+	const [isEditorFocused, setIsEditorFocused] = createSignal(false);
 	// Function to format input (aka remove extra whitespaces)
 	const formatInput = (value: string) => value.replace(/\s\s+/g, ' ').trim();
 	// Derived signal for total words count
@@ -68,7 +70,7 @@ function TextAreaEditor() {
 		placeholderElement.addEventListener("animationend", (_) => {
 			placeholderElement.style.animation = initialAnimValue;
 			// Changing focus
-			setIsFocused(true);
+			setIsEditorFocused(true);
 			textAreaElement.focus();
 		}, {once: true});
 
@@ -83,7 +85,7 @@ function TextAreaEditor() {
 	// When focus from empty textarea is removed placeholder is displayed
 	textAreaElement.addEventListener("focusout", (_) => {
 		if (currentEditorLine().trim().length === 0) {
-			setIsFocused(false);
+			setIsEditorFocused(false);
 			// Ensure that after focus change no whitespace characters are left after
 			setCurrentEditorLine('');
 			textAreaElement.value = '';
@@ -98,7 +100,7 @@ function TextAreaEditor() {
 					<span class="editor-text" style={`opacity: ${opacity_delta * (i() + 1)}%`}>{line}<br /></span>
 				}</For>
 			</div>
-			<Show when={isFocused()} fallback={placeholderElement}>
+			<Show when={isEditorFocused()} fallback={placeholderElement}>
 				{textAreaElement}
 			</Show>
 		</div>
