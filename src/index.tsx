@@ -1,66 +1,36 @@
 /* @refresh reload */
 import {render} from "solid-js/web";
 import {createSignal, For, Show} from "solid-js";
+import { appWindow } from '@tauri-apps/api/window'
 import "./index.css";
 
 
 // Future TODO: Is it possible to share filestream with Rust? OR! Call Rust code everytime new line is added
 
-function TextAreaEditor() {
-	// How many previous lines is displayed above textarea
-	const MAX_LINES_DISPLAYED = 4;
+function TextAreaEditor(props: { onLineBreak: (eventTarget: HTMLTextAreaElement) => void}) {
 	// Maximum length for single line
-	const MAX_LINE_LENGTH = 50;
+	const MAX_AREA_LENGTH = 50;
 	// Length at which textarea underline color changes to indicate approaching chars limit
-	const WARNING_LINE_LENGTH = MAX_LINE_LENGTH - 8;
-	
+	const WARNING_AREA_LENGTH = MAX_AREA_LENGTH - 8;
 	// Flag to check for ctrl presses
 	let wasCtrlPressedRecently: boolean = false;
-	// Contains only current line
-	const [currentEditorLine, setCurrentEditorLine] = createSignal("");
-	// Contains all lines // TODO: might change in the future
-	const [editorContentLines, setEditorContentLines] = createSignal<string[]>([]);
-	const [isEditorFocused, setIsEditorFocused] = createSignal(false);
-	// Function to format input (aka remove extra whitespaces)
-	const formatInput = (value: string) => value.replace(/\s\s+/g, ' ').trim();
-	// Derived signal for total words count
-	// NOTE: This seems super inefficient, but I'll leave it for now and 
-	// test later to see if this actually matters
-	const totalWordsCount = () => {
-		// Format current line
-		let result = formatInput(currentEditorLine()).trimEnd().split(' ').length - 1;
-		// Calculating words from previous lines
-		for (const line of editorContentLines()) {
-			result += line.split(' ').length;
-		}
-		return result;
-	}
+	// Holds current line value that updates every time onInput occurs, which is more "accurate" than onkeydown
+	const [currentAreaLine, setCurrentAreaLine] = createSignal("");
+	const [isAreaFocused, setIsAreaFocused] = createSignal(false);
 	
-	function AppendLine(textAreaSource: HTMLTextAreaElement) {
-		// Step 1. Format line from textarea
-		const formattedLine = formatInput(textAreaSource.value);
-		if (formattedLine.length === 0) {
-			return;
-		}
-		// Step 2. Update lines
-		setEditorContentLines([...editorContentLines(), formattedLine]);
-		// Step 3. Clear textarea
-		textAreaSource.value = '';
-	}
 	function onTextareaKeydown(e: KeyboardEvent & { currentTarget: HTMLTextAreaElement; target: Element; }) {
 		// Pasting text isn't allowed because it can mess up lines
 		if (wasCtrlPressedRecently && e.key === 'v') {
 			e.preventDefault();
 		}
 		// Changing from current line after
-		else if (currentEditorLine().length > MAX_LINE_LENGTH || e.key === "Enter" || (e.key === ' ' && currentEditorLine().length > WARNING_LINE_LENGTH)) {
-			AppendLine(e.currentTarget);
-			e.currentTarget.value = '';
+		else if (currentAreaLine().length > MAX_AREA_LENGTH || e.key === "Enter" || (e.key === ' ' && currentAreaLine().length > WARNING_AREA_LENGTH)) {
+			props.onLineBreak(e.currentTarget);
 		}
 		wasCtrlPressedRecently = e.ctrlKey;
 	}
-
-	const placeholderElement = <p class="editor-placeholder">Let your thoughts flow <i class="">mindlessly</i> like a river...</p> as HTMLParagraphElement;
+	
+	const placeholderElement = <p class="editor-placeholder">Let your thoughts flow <i>mindlessly</i> like a river...</p> as HTMLParagraphElement;
 	// When placeholder is clicked it fades away and reveals editable textarea
 	placeholderElement.addEventListener("click", (_) => {
 		const initialAnimValue = placeholderElement.style.animation;
@@ -70,7 +40,7 @@ function TextAreaEditor() {
 		placeholderElement.addEventListener("animationend", (_) => {
 			placeholderElement.style.animation = initialAnimValue;
 			// Changing focus
-			setIsEditorFocused(true);
+			setIsAreaFocused(true);
 			textAreaElement.focus();
 		}, {once: true});
 
@@ -79,41 +49,78 @@ function TextAreaEditor() {
 	// style - sets width value to fit all characters (for details check out "ch" unit in css)
 	// onInput - updates signal with current line
 	// onkeydown - checks if current line should be "pushed back"
-	const textAreaElement = <textarea rows="1" style={`width: ${MAX_LINE_LENGTH + 1}ch`} onkeydown={onTextareaKeydown} 
-								onInput={e => setCurrentEditorLine(e.currentTarget.value)}
-								class={`editor-text-field fade-in-transition ${currentEditorLine().length >= WARNING_LINE_LENGTH ? "editor-text-field-warning" : ''}`}></textarea> as HTMLTextAreaElement;
-	// When focus from empty textarea is removed placeholder is displayed
+	const textAreaElement = <textarea rows="1" style={`width: ${currentAreaLine().length + 1}ch`} onkeydown={onTextareaKeydown} 
+								onInput={e => setCurrentAreaLine(e.currentTarget.value)}
+								class={`editor-text-field fade-in-transition ${currentAreaLine().length >= WARNING_AREA_LENGTH ? "editor-text-field-warning" : ''}`}></textarea> as HTMLTextAreaElement;
+	// When focus from empty textarea is removed placeholder is displayed again
 	textAreaElement.addEventListener("focusout", (_) => {
-		if (currentEditorLine().trim().length === 0) {
-			setIsEditorFocused(false);
+		if (currentAreaLine().trim().length === 0) {
+			setIsAreaFocused(false);
 			// Ensure that after focus change no whitespace characters are left after
-			setCurrentEditorLine('');
+			setCurrentAreaLine('');
 			textAreaElement.value = '';
 		}
 	});
 
 	return <>
 		<div id="editor-text-field-container">
-			<div>
-				<For each={editorContentLines().slice(Math.max(editorContentLines().length - MAX_LINES_DISPLAYED, 0), editorContentLines().length)}>
-				{(line, i, opacity_delta = Math.floor(100 / (MAX_LINES_DISPLAYED + 1))) => 
-					<span class="editor-text" style={`opacity: ${opacity_delta * (i() + 1)}%`}>{line}<br /></span>
-				}</For>
-			</div>
-			<Show when={isEditorFocused()} fallback={placeholderElement}>
+			<Show when={isAreaFocused()} fallback={placeholderElement}>
 				{textAreaElement}
 			</Show>
 		</div>
-		<p id="editor-word-count" class="editor-text text-center absolute bottom-8"><span class="opacity-60">Words:</span> {totalWordsCount()}</p>
 	</>
 }
+
+function Editor() {
+	// Word counter (gets updated whenever new line is added)
+	const [totalWordsCount, setTotalWordsCount] = createSignal(0);
+	// How many previous lines are displayed
+	const MAX_LINES_DISPLAYED = 4;
+	// Lines with different opacity values that are displayed above textarea
+	const [displayedLines, setDisplayedLines] = createSignal<string[]>([]);
+
+	function OnTextAreaLineBreak(eventTarget: HTMLTextAreaElement) {
+		const formattedValue = eventTarget.value.replace(/\s\s+/g, ' ').trim();
+		// 1) Update words counter
+		setTotalWordsCount(totalWordsCount() + formattedValue.trimEnd().split(' ').length);
+		// 2) Update lines
+		let newLines = [...displayedLines(), formattedValue];
+		if (newLines.length > MAX_LINES_DISPLAYED) {
+			newLines.splice(0, 1);
+		}
+		setDisplayedLines(newLines);
+		// 3) Clear textarea
+		eventTarget.value = '';
+	}
+
+	return <>
+		<div>
+			<div>
+				<For each={displayedLines()}>{(line, i, opacity_delta = Math.floor(100 / (MAX_LINES_DISPLAYED + 1))) =>
+					<span class="editor-text" style={`opacity: ${opacity_delta * (i() + 1)}%`}>{line}<br /></span>
+				}</For>
+			</div>
+
+			<TextAreaEditor onLineBreak={OnTextAreaLineBreak} />
+
+			<p id="editor-word-count" class="editor-text text-center mt-2"><span class="opacity-60">Words:</span> {totalWordsCount()}</p>
+		</div>
+	</>
+}
+
 
 function App() {
 	return <>
 		<div class="flex flex-col space-y-2 items-center justify-center h-screen">
-			<TextAreaEditor />
+			<Editor />
 		</div>
 	</>
 }
+
+// Adding handlers to titlebar buttons
+// Note: If I don't add "as HTMLElement" TS complains about possible null error
+(document.getElementById('titlebar-minimize') as HTMLElement).addEventListener('click', () => appWindow.minimize());
+(document.getElementById('titlebar-maximize') as HTMLElement).addEventListener('click', () => appWindow.toggleMaximize());
+(document.getElementById('titlebar-close') as HTMLElement).addEventListener('click', () => appWindow.close());
 
 render(() => <App />, document.getElementById("root") as HTMLElement);

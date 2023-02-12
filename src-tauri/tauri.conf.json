@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Mindless typer",
-    "version": "0.0.0"
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -16,6 +16,17 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
       }
     },
     "bundle": {
@@ -63,6 +74,7 @@
         "height": 600,
         "resizable": false,
         "title": "Mindless typer",
+        "decorations": false,
         "width": 800
       }
     ]
